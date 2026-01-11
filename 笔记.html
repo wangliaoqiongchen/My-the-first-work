@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可保存形记事本</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        #note-content {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #save-btn {
+            background-color: #2196F3;
+            color: #fff;
+        }
+        #clear-btn {
+            background-color: #f44336;
+            color: #fff;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="notebook-container">
+        <h1>可保存形记事本</h1>
+        <textarea id="note-content" placeholder="在这里输入笔记内容..."></textarea>
+        <div class="btn-group">
+            <button id="save-btn">保存笔记</button>
+            <button id="clear-btn">清空内容</button>
+        </div>
+    </div>
+
+    <script>
+        // 获取元素
+        const noteContent = document.getElementById('note-content');
+        const saveBtn = document.getElementById('save-btn');
+        const clearBtn = document.getElementById('clear-btn');
+
+        // 页面加载时读取本地存储的笔记
+        window.onload = function() {
+            const savedNote = localStorage.getItem('myNote');
+            if (savedNote) {
+                noteContent.value = savedNote;
+            }
+        }
+
+        // 保存笔记到本地存储
+        saveBtn.addEventListener('click', function() {
+            const content = noteContent.value;
+            if (content.trim() === '') {
+                alert('笔记内容不能为空！');
+                return;
+            }
+            localStorage.setItem('myNote', content);
+            alert('笔记保存成功！');
+        });
+
+        // 清空笔记内容
+        clearBtn.addEventListener('click', function() {
+            if (confirm('确定要清空所有内容吗？')) {
+                noteContent.value = '';
+                localStorage.removeItem('myNote');
+            }
+        });
+    </script>
+</body>
+</html>
+    
