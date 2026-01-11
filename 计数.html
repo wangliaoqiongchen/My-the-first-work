@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实弹空弹计数器（优化版）</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Arial", sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .counter-container {
+            width: 90%;
+            max-width: 600px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .counter-wrapper {
+            display: flex;
+            flex-direction: column; /* 竖屏默认上下排列 */
+        }
+        .counter-section {
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .real-ammo {
+            background-color: #e53935;
+            color: white;
+        }
+        .empty-ammo {
+            background-color: #757575;
+            color: white;
+        }
+        .sync-reset {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+        }
+        .sync-reset button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            background-color: #333; /* 深灰色统一风格 */
+        }
+        .sync-reset button:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+        .count-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        .count-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .counter-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        .real-ammo .counter-btn.add {
+            background-color: #ef5350;
+        }
+        .real-ammo .counter-btn.minus {
+            background-color: #c62828;
+        }
+        .real-ammo .counter-btn.reset {
+            background-color: #ef5350;
+        }
+        .empty-ammo .counter-btn.add {
+            background-color: #9e9e9e;
+        }
+        .empty-ammo .counter-btn.minus {
+            background-color: #616161;
+        }
+        .empty-ammo .counter-btn.reset {
+            background-color: #9e9e9e;
+        }
+        .counter-btn:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        /* 横屏适配：左右排列 */
+        @media (orientation: landscape) {
+            .counter-wrapper {
+                flex-direction: row;
+            }
+            .sync-reset {
+                flex-direction: column;
+                padding: 0 10px;
+            }
+            .sync-reset button {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="counter-container">
+        <div class="counter-wrapper">
+            <!-- 实弹区域 -->
+            <section class="counter-section real-ammo">
+                <div class="count-title">实弹</div>
+                <div class="count-display" id="real-count">0</div>
+                <div class="btn-group">
+                    <button class="counter-btn add" id="real-add">+</button>
+                    <button class="counter-btn minus" id="real-minus">-</button>
+                    <button class="counter-btn reset" id="real-reset">重置</button>
+                </div>
+            </section>
+
+            <!-- 同步重置区域 -->
+            <div class="sync-reset">
+                <button id="sync-reset">同步重置</button>
+            </div>
+
+            <!-- 空弹区域 -->
+            <section class="counter-section empty-ammo">
+                <div class="count-title">空</div>
+                <div class="count-display" id="empty-count">0</div>
+                <div class="btn-group">
+                    <button class="counter-btn add" id="empty-add">+</button>
+                    <button class="counter-btn minus" id="empty-minus">-</button>
+                    <button class="counter-btn reset" id="empty-reset">重置</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // 实弹计数
+        let realCount = 0;
+        // 空弹计数
+        let emptyCount = 0;
+
+        // 元素获取
+        const realCountEl = document.getElementById("real-count");
+        const realAddBtn = document.getElementById("real-add");
+        const realMinusBtn = document.getElementById("real-minus");
+        const realResetBtn = document.getElementById("real-reset");
+
+        const emptyCountEl = document.getElementById("empty-count");
+        const emptyAddBtn = document.getElementById("empty-add");
+        const emptyMinusBtn = document.getElementById("empty-minus");
+        const emptyResetBtn = document.getElementById("empty-reset");
+
+        const syncResetBtn = document.getElementById("sync-reset");
+
+        // 更新实弹计数
+        function updateRealCount() {
+            realCountEl.textContent = realCount;
+        }
+
+        // 更新空弹计数
+        function updateEmptyCount() {
+            emptyCountEl.textContent = emptyCount;
+        }
+
+        // 实弹加1
+        realAddBtn.addEventListener("click", () => {
+            realCount++;
+            updateRealCount();
+        });
+
+        // 实弹减1（防负）
+        realMinusBtn.addEventListener("click", () => {
+            realCount = Math.max(0, realCount - 1);
+            updateRealCount();
+        });
+
+        // 实弹重置
+        realResetBtn.addEventListener("click", () => {
+            realCount = 0;
+            updateRealCount();
+        });
+
+        // 空弹加1
+        emptyAddBtn.addEventListener("click", () => {
+            emptyCount++;
+            updateEmptyCount();
+        });
+
+        // 空弹减1（防负）
+        emptyMinusBtn.addEventListener("click", () => {
+            emptyCount = Math.max(0, emptyCount - 1);
+            updateEmptyCount();
+        });
+
+        // 空弹重置
+        emptyResetBtn.addEventListener("click", () => {
+            emptyCount = 0;
+            updateEmptyCount();
+        });
+
+        // 同步重置（同时重置实弹和空弹）
+        syncResetBtn.addEventListener("click", () => {
+            realCount = 0;
+            emptyCount = 0;
+            updateRealCount();
+            updateEmptyCount();
+        });
+    </script>
+</body>
+</html>
